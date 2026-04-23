@@ -27,10 +27,9 @@ user_pref("gfx.webrender.enabled", true);
 // Hardware-accelerated canvas (uses GPU for 2D drawing, less CPU)
 user_pref("gfx.canvas.accelerated", true);
 
-// Enable hardware video decoding (VAAPI/DXVA for AMD GPU)
+// Enable hardware video decoding via WMF/D3D11 (RX 9070 XT on Windows)
 user_pref("media.hardware-video-decoding.enabled", true);
 user_pref("media.hardware-video-decoding.force-enabled", true);
-user_pref("media.ffmpeg.vaapi.enabled", true);
 
 // Use GPU for compositing
 user_pref("layers.acceleration.force-enabled", true);
@@ -68,8 +67,9 @@ user_pref("media.memory_cache_max_size", 65536);
 // Auto-unload background tabs when memory is low
 user_pref("browser.tabs.unloadOnLowMemory", true);
 
-// Aggressively unload inactive tabs after 60 seconds (Edge Memory Saver equivalent)
-user_pref("browser.tabs.min_inactive_duration_before_unload", 60000);
+// Unload inactive tabs after 5 minutes (Edge Memory Saver equivalent).
+// 60s was too aggressive — caused constant tab-reload storms during gaming.
+user_pref("browser.tabs.min_inactive_duration_before_unload", 300000);
 
 // Lower the memory pressure threshold so tabs get unloaded sooner
 user_pref("browser.low_commit_space_threshold_mb", 1024);
@@ -90,7 +90,6 @@ user_pref("network.http.http3.enable", true);
 
 // Increase connections for faster parallel downloads
 user_pref("network.http.max-connections", 1800);
-user_pref("network.http.max-persistent-connections-per-server", 10);
 user_pref("network.http.max-urgent-start-excessive-connections-per-host", 5);
 
 // DNS-over-HTTPS (Cloudflare) — faster + private DNS resolution
@@ -365,7 +364,7 @@ user_pref("nglayout.initialpaint.delay_in_oopif", 0);
 // Increase decoded image cache to 512MB (default ~256MB)
 // At 4K resolution, images are 4x larger — this prevents re-decoding jank
 user_pref("image.mem.surfacecache.max_size_kb", 524288);
-// Minimum surface cache 128MB (default ~64MB)
+// Minimum time before a cached surface expires: 120 seconds (default ~60s)
 user_pref("image.mem.surfacecache.min_expiration_ms", 120000);
 // Decode images eagerly in idle time (smoother scrolling on image-heavy pages)
 user_pref("image.mem.decode_bytes_at_a_time", 65536);
@@ -405,19 +404,15 @@ user_pref("dom.ipc.processCount.extension", 1);
 user_pref("dom.ipc.processCount.privilegedabout", 1);
 
 // --- TIMER THROTTLING ---
-// Don't aggressively throttle background tab timers when a tab has
-// active media (keeps PiP video smooth even when Firefox is in background)
-user_pref("dom.min_background_timeout_value", 1000);
+// Throttle background tab timers immediately (0ms grace period).
+// Tabs with active media (including PiP source tab) are automatically exempt,
+// so PiP stays smooth even with aggressive throttling.
 user_pref("dom.timeout.throttling_delay", 0);
 
 // --- SERVICE WORKERS ---
 // Limit service worker idle timeout (saves CPU when not actively needed)
 user_pref("dom.serviceWorkers.idle_timeout", 30000);
 user_pref("dom.serviceWorkers.idle_extended_timeout", 30000);
-
-// --- WEBRTC ---
-// Disable WebRTC leak (privacy) but keep functional for video calls
-user_pref("media.peerconnection.ice.default_address_only", true);
 
 // --- WEBSOCKET ---
 // Keep WebSocket alive longer (for live sports streams)
@@ -445,4 +440,3 @@ user_pref("dom.min_background_timeout_value", 10000);
 user_pref("dom.timeout.background_throttling_max_delay", 10000);
 user_pref("dom.request_idle_callback.deadline", 100);
 user_pref("network.http.max-persistent-connections-per-server", 6);
-user_pref("network.prefetch-next", false);
