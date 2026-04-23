@@ -3,8 +3,8 @@ ac_add_options --enable-application=browser
 # Clang-cl flag syntax: -clang: prefix required on Windows for GCC-style flags
 ac_add_options --enable-optimize="-O3 -clang:-march=znver4"
 
-# Cross-language LTO (C++ <-> Rust): Mozilla's recommended mode for release builds
-ac_add_options --enable-lto=cross
+# Thin LTO: Better compatibility for mixed Rust/C++ projects
+ac_add_options --enable-lto=thin
 
 # Release mode (enables additional release-only optimizations)
 ac_add_options --enable-release
