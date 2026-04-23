@@ -23,17 +23,23 @@
 // Force hardware-accelerated rendering (WebRender) — offloads to RX 9070 XT
 user_pref("gfx.webrender.all", true);
 user_pref("gfx.webrender.enabled", true);
+user_pref("gfx.webrender.compositor.force-enabled", true);
+user_pref("gfx.webrender.dcomp-video-hw-overlay-win-force-enabled", true);
+user_pref("gfx.webrender.precache-shaders", true);
+user_pref("gfx.webrender.dcomp-use-virtual-surfaces", true);
 
 // Hardware-accelerated canvas (uses GPU for 2D drawing, less CPU)
 user_pref("gfx.canvas.accelerated", true);
+user_pref("gfx.canvas.accelerated.cache-items", 32768);
+user_pref("gfx.canvas.accelerated.cache-size", 4096);
 
 // Enable hardware video decoding via WMF/D3D11 (RX 9070 XT on Windows)
 user_pref("media.hardware-video-decoding.enabled", true);
 user_pref("media.hardware-video-decoding.force-enabled", true);
 
 // Use GPU for compositing
-user_pref("layers.acceleration.force-enabled", true);
 user_pref("layers.gpu-process.enabled", true);
+user_pref("layers.gpu-process.force-enabled", true);
 
 // Reduce layout reflows — render paint less frequently during page load
 // (reduces CPU spikes during complex page rendering)
@@ -46,11 +52,6 @@ user_pref("javascript.options.ion", true);
 /****************************************************************************
  * SECTION 2: RESOURCE MANAGEMENT — RAM & Process Control                   *
  ****************************************************************************/
-
-// Limit content processes to 4 (from default 8)
-// Each process = ~80-150MB RAM. 4 is the sweet spot for gaming:
-// enough for PiP + a few tabs without hogging RAM from your game
-user_pref("dom.ipc.processCount", 4);
 
 // Disable disk cache — use memory only (you have 32GB + NVMe, no need
 // for disk cache I/O competing with game asset loading)
@@ -81,6 +82,14 @@ user_pref("browser.sessionstore.interval", 60000);
 // Disable accessibility services if unused (saves ~50-100MB RAM)
 user_pref("accessibility.force_disabled", 1);
 
+// CPU/power efficiency — don't preload processes we're not using yet
+user_pref("dom.ipc.processPrelaunch.enabled", false);
+user_pref("browser.tabs.remote.warmup.enabled", false);
+
+// Disable push notifications (unnecessary background wake-ups)
+user_pref("dom.push.enabled", false);
+user_pref("dom.push.connection.enabled", false);
+
 /****************************************************************************
  * SECTION 3: NETWORK — Fast Page Loads, Low Latency                        *
  ****************************************************************************/
@@ -110,6 +119,12 @@ user_pref("browser.places.speculativeConnect.enabled", true);
 
 // Faster TLS handshakes
 user_pref("security.ssl.enable_ocsp_stapling", true);
+
+// TCP Fast Open — reduces RTT on repeated connections
+user_pref("network.tcp.tcp_fastopen_enable", true);
+
+// Larger TLS session cache — skip full handshake on repeat visits
+user_pref("network.ssl_tokens_cache_capacity", 10240);
 
 /****************************************************************************
  * SECTION 4: SCROLLING — Tuned for 160Hz Display                           *
@@ -349,6 +364,11 @@ user_pref("media.suspend-bkgnd-video.enabled", false);
 // Allow autoplay (for sports streams)
 user_pref("media.autoplay.default", 0);
 
+// Low-latency audio for PiP — WASAPI event-driven at 20ms interactive latency
+user_pref("media.webaudio.audiocontextoptions-latencyhint-interactive-ms", 20);
+user_pref("media.cubeb_latency_playback_ms", 40);
+user_pref("media.cubeb_latency_msg_ms", 20);
+
 /****************************************************************************
  * SECTION 8: DEEP ENGINE TUNING — What Makes This FASTER Than Edge         *
  * These are the prefs Edge/Chromium can't match because Gecko exposes them *
@@ -385,19 +405,13 @@ user_pref("network.buffer.cache.count", 128);
 // Incremental GC: smaller, more frequent GC slices = less jank
 user_pref("javascript.options.mem.gc_incremental", true);
 user_pref("javascript.options.mem.gc_per_zone", true);
-// Higher GC trigger = GC happens less often (trade more RAM for less jank)
-// With 32GB RAM, we can afford to let garbage accumulate more
-user_pref("javascript.options.mem.gc_high_frequency_heap_growth_max", 300);
-user_pref("javascript.options.mem.gc_high_frequency_heap_growth_min", 150);
 
 // --- FISSION (Site Isolation) PROCESS TUNING ---
 // Keep Fission ON for security but limit isolated processes
 // This is the Edge equivalent of "sleeping tabs" — fewer processes = less RAM
 user_pref("fission.autostart", true);
-// Only 1 isolated web process — sites share processes like Edge does
-// This is the biggest RAM saver: prevents 13+ processes from spawning
-user_pref("dom.ipc.processCount.webIsolated", 1);
-user_pref("dom.ipc.processCount.webCOOP+COEP", 1);
+// Fission isolation: 4 isolated web processes — enough parallelism without RAM waste
+user_pref("dom.ipc.processCount.webIsolated", 4);
 // Limit file/extension/privilegedabout processes to 1 each
 user_pref("dom.ipc.processCount.file", 1);
 user_pref("dom.ipc.processCount.extension", 1);
