@@ -1,16 +1,24 @@
 ac_add_options --enable-application=browser
-# Optimized for Zen 4 (7600X) - Memory Stable Version
-ac_add_options --enable-optimize="-O2 -GS- -clang:-march=znver4"
+
+# Optimized for Zen 4 (7600X) with OOM-safe parallelism
+ac_add_options --enable-optimize="-O3 -clang:-march=znver4"
 ac_add_options --enable-release
+ac_add_options --enable-lto=cross
 ac_add_options --disable-debug
 ac_add_options --disable-debug-symbols
 ac_add_options --disable-tests
-ac_add_options --enable-lto=thin
 
-# Disable bloated components
+# PGO: biggest perf win. Must use mk_add_options, not ac_add_options.
+mk_add_options MOZ_PGO=1
+
+# Cap parallel compilation to prevent OOM during PGO+LTO (32GB RAM / 7600X safe with -j4)
+mk_add_options MOZ_MAKE_FLAGS=-j4
+
+# Rust: target Zen 4 for styling engine, URL parsing, and stylo
+export RUSTFLAGS="-Ctarget-cpu=znver4 -Copt-level=3"
+
+# Disable background/reporting components (WebRTC not needed for YouTube PiP)
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
+ac_add_options --disable-maintenance-service
 ac_add_options --disable-webrtc
-
-# Let the build system handle Rust optimizations (Avoids OOM)
-unset RUSTFLAGS
