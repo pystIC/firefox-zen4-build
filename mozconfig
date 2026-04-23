@@ -1,15 +1,16 @@
 ac_add_options --enable-application=browser
-# DeepSeek Optimized Flags for Zen 4 (7600X)
+# Optimized for Zen 4 (7600X) - Memory Stable Version
 ac_add_options --enable-optimize="-O2 -GS- -clang:-march=znver4"
 ac_add_options --enable-release
 ac_add_options --disable-debug
+ac_add_options --disable-debug-symbols
 ac_add_options --disable-tests
 ac_add_options --enable-lto=thin
 
-# Rust: target Zen 4, max optimization with Thin LTO
-export RUSTFLAGS="-C target-cpu=znver4 -C opt-level=3 -C codegen-units=1 -C lto=thin"
-
-# Core performance-related component disabling
+# Disable bloated components
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-webrtc
+
+# Let the build system handle Rust optimizations (Avoids OOM)
+unset RUSTFLAGS
