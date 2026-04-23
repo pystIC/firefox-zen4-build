@@ -3,8 +3,10 @@ $env:PATH = "C:\Users\Devin\.cargo\bin;C:\mozilla-build\python3;C:\mozilla-build
 $env:MOZCONFIG = "C:\Users\Devin\.gemini\antigravity\scratch\gecko-dev\mozconfig"
 Set-Location -Path "C:\Users\Devin\.gemini\antigravity\scratch\gecko-dev"
 
-# Building
-
-# Building
-Write-Host "Starting Build..."
-python mach build > build.log 2>&1
+Write-Host "Starting build..."
+python mach build 2>&1 | Tee-Object -FilePath build.log
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Build failed (exit code $LASTEXITCODE). See build.log for details."
+    exit $LASTEXITCODE
+}
+Write-Host "Build complete."

@@ -30,7 +30,6 @@ user_pref("gfx.canvas.accelerated", true);
 // Enable hardware video decoding (VAAPI/DXVA for AMD GPU)
 user_pref("media.hardware-video-decoding.enabled", true);
 user_pref("media.hardware-video-decoding.force-enabled", true);
-user_pref("media.ffmpeg.vaapi.enabled", true);
 
 // Use GPU for compositing
 user_pref("layers.acceleration.force-enabled", true);
@@ -69,7 +68,7 @@ user_pref("media.memory_cache_max_size", 65536);
 user_pref("browser.tabs.unloadOnLowMemory", true);
 
 // Aggressively unload inactive tabs after 60 seconds (Edge Memory Saver equivalent)
-user_pref("browser.tabs.min_inactive_duration_before_unload", 60000);
+user_pref("browser.tabs.min_inactive_duration_before_unload", 300000);
 
 // Lower the memory pressure threshold so tabs get unloaded sooner
 user_pref("browser.low_commit_space_threshold_mb", 1024);
@@ -90,7 +89,6 @@ user_pref("network.http.http3.enable", true);
 
 // Increase connections for faster parallel downloads
 user_pref("network.http.max-connections", 1800);
-user_pref("network.http.max-persistent-connections-per-server", 10);
 user_pref("network.http.max-urgent-start-excessive-connections-per-host", 5);
 
 // DNS-over-HTTPS (Cloudflare) — faster + private DNS resolution
@@ -105,7 +103,6 @@ user_pref("network.predictor.enabled", true);
 
 // Speculative connections for faster link clicking
 user_pref("network.http.speculative-parallel-limit", 6);
-user_pref("network.prefetch-next", true);
 user_pref("browser.urlbar.speculativeConnect.enabled", true);
 user_pref("browser.places.speculativeConnect.enabled", true);
 
@@ -407,7 +404,6 @@ user_pref("dom.ipc.processCount.privilegedabout", 1);
 // --- TIMER THROTTLING ---
 // Don't aggressively throttle background tab timers when a tab has
 // active media (keeps PiP video smooth even when Firefox is in background)
-user_pref("dom.min_background_timeout_value", 1000);
 user_pref("dom.timeout.throttling_delay", 0);
 
 // --- SERVICE WORKERS ---
@@ -417,10 +413,6 @@ user_pref("dom.serviceWorkers.idle_extended_timeout", 30000);
 
 // --- WEBRTC ---
 // Disable WebRTC leak (privacy) but keep functional for video calls
-user_pref("media.peerconnection.ice.default_address_only", true);
-
-// --- WEBSOCKET ---
-// Keep WebSocket alive longer (for live sports streams)
 user_pref("network.websocket.timeout.ping.request", 88);
 
 // --- FONT RENDERING ---
