@@ -12,3 +12,4 @@ export RUSTFLAGS="-C target-cpu=znver4 -C opt-level=3 -C codegen-units=1 -C lto=
 # Core performance-related component disabling
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
+ac_add_options --disable-webrtc
