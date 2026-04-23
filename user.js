@@ -438,3 +438,8 @@ user_pref("dom.timeout.background_throttling_max_delay", 10000);
 user_pref("dom.request_idle_callback.deadline", 100);
 user_pref("network.http.max-persistent-connections-per-server", 6);
 user_pref("network.prefetch-next", false);
+
+// Final Chromium-Killer Network Tweaks
+user_pref("network.predictor.max-resources-per-entry", 250);
+user_pref("network.predictor.cleaned-up", true);
+user_pref("network.http.pacing.requests.enabled", false);
