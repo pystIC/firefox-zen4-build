@@ -374,6 +374,12 @@ user_pref("media.cubeb_latency_msg_ms", 20);
  * These are the prefs Edge/Chromium can't match because Gecko exposes them *
  ****************************************************************************/
 
+// --- STARTUP ---
+// Show window skeleton immediately (perceived faster startup)
+user_pref("browser.startup.preXulSkeletonUI", true);
+// Cache compiled WebRender shaders to disk (avoids recompile on every launch)
+user_pref("gfx.webrender.program-binary-disk", true);
+
 // --- INSTANT PAINT ---
 // Paint the page immediately (0ms delay) instead of waiting for full layout
 // Edge waits for layout — this makes Firefox FEEL faster on every page load
@@ -416,6 +422,11 @@ user_pref("dom.ipc.processCount.webIsolated", 4);
 user_pref("dom.ipc.processCount.file", 1);
 user_pref("dom.ipc.processCount.extension", 1);
 user_pref("dom.ipc.processCount.privilegedabout", 1);
+
+// --- PROCESS PRIORITY ---
+// Disable Firefox's internal priority manager — Process Lasso ProBalance handles this,
+// and two priority managers fighting each other cause jitter.
+user_pref("dom.ipc.processPriorityManager.enabled", false);
 
 // --- TIMER THROTTLING ---
 // Throttle background tab timers immediately (0ms grace period).

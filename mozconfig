@@ -1,24 +1,30 @@
 ac_add_options --enable-application=browser
 
-# Optimized for Zen 4 (7600X) with OOM-safe parallelism
+# Clang-cl flag syntax: -clang: prefix required on Windows for GCC-style flags
 ac_add_options --enable-optimize="-O3 -clang:-march=znver4"
-ac_add_options --enable-release
+
+# Cross-language LTO (C++ <-> Rust): Mozilla's recommended mode for release builds
 ac_add_options --enable-lto=cross
+
+# Release mode (enables additional release-only optimizations)
+ac_add_options --enable-release
 ac_add_options --disable-debug
 ac_add_options --disable-debug-symbols
-ac_add_options --disable-tests
 
-# PGO: biggest perf win. Must use mk_add_options, not ac_add_options.
+# PGO: must use mk_add_options, not ac_add_options
 mk_add_options MOZ_PGO=1
+export MOZ_PGO_OPTIMIZE_FLAGS="-O3 -clang:-march=znver4 -fprofile-use -fprofile-correction"
 
-# Cap parallel compilation to prevent OOM during PGO+LTO (32GB RAM / 7600X safe with -j4)
+# Limit parallelism during PGO+LTO link to avoid OOM on 32GB
 mk_add_options MOZ_MAKE_FLAGS=-j4
 
-# Rust: target Zen 4 for styling engine, URL parsing, and stylo
-export RUSTFLAGS="-Ctarget-cpu=znver4 -Copt-level=3"
+# Rust: target Zen 4, max optimization, single codegen unit for LTO
+export RUSTFLAGS="-C target-cpu=znver4 -C opt-level=3 -C codegen-units=1"
 
-# Disable background/reporting components (WebRTC not needed for YouTube PiP)
+# Disable unused subsystems (smaller binary, fewer indirect calls)
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
 ac_add_options --disable-maintenance-service
 ac_add_options --disable-webrtc
+ac_add_options --disable-tests
+ac_add_options --disable-accessibility
