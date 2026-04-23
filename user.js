@@ -23,17 +23,23 @@
 // Force hardware-accelerated rendering (WebRender) — offloads to RX 9070 XT
 user_pref("gfx.webrender.all", true);
 user_pref("gfx.webrender.enabled", true);
+user_pref("gfx.webrender.compositor.force-enabled", true);
+user_pref("gfx.webrender.dcomp-video-hw-overlay-win-force-enabled", true);
+user_pref("gfx.webrender.precache-shaders", true);
+user_pref("gfx.webrender.dcomp-use-virtual-surfaces", true);
 
 // Hardware-accelerated canvas (uses GPU for 2D drawing, less CPU)
 user_pref("gfx.canvas.accelerated", true);
+user_pref("gfx.canvas.accelerated.cache-items", 32768);
+user_pref("gfx.canvas.accelerated.cache-size", 4096);
 
-// Enable hardware video decoding (VAAPI/DXVA for AMD GPU)
+// Enable hardware video decoding via WMF/D3D11 (RX 9070 XT on Windows)
 user_pref("media.hardware-video-decoding.enabled", true);
 user_pref("media.hardware-video-decoding.force-enabled", true);
 
 // Use GPU for compositing
-user_pref("layers.acceleration.force-enabled", true);
 user_pref("layers.gpu-process.enabled", true);
+user_pref("layers.gpu-process.force-enabled", true);
 
 // Reduce layout reflows — render paint less frequently during page load
 // (reduces CPU spikes during complex page rendering)
@@ -46,11 +52,6 @@ user_pref("javascript.options.ion", true);
 /****************************************************************************
  * SECTION 2: RESOURCE MANAGEMENT — RAM & Process Control                   *
  ****************************************************************************/
-
-// Limit content processes to 4 (from default 8)
-// Each process = ~80-150MB RAM. 4 is the sweet spot for gaming:
-// enough for PiP + a few tabs without hogging RAM from your game
-user_pref("dom.ipc.processCount", 4);
 
 // Disable disk cache — use memory only (you have 32GB + NVMe, no need
 // for disk cache I/O competing with game asset loading)
@@ -67,7 +68,8 @@ user_pref("media.memory_cache_max_size", 65536);
 // Auto-unload background tabs when memory is low
 user_pref("browser.tabs.unloadOnLowMemory", true);
 
-// Aggressively unload inactive tabs after 60 seconds (Edge Memory Saver equivalent)
+// Unload inactive tabs after 5 minutes (Edge Memory Saver equivalent).
+// 60s was too aggressive — caused constant tab-reload storms during gaming.
 user_pref("browser.tabs.min_inactive_duration_before_unload", 300000);
 
 // Lower the memory pressure threshold so tabs get unloaded sooner
@@ -79,6 +81,14 @@ user_pref("browser.sessionstore.interval", 60000);
 
 // Disable accessibility services if unused (saves ~50-100MB RAM)
 user_pref("accessibility.force_disabled", 1);
+
+// CPU/power efficiency — don't preload processes we're not using yet
+user_pref("dom.ipc.processPrelaunch.enabled", false);
+user_pref("browser.tabs.remote.warmup.enabled", false);
+
+// Disable push notifications (unnecessary background wake-ups)
+user_pref("dom.push.enabled", false);
+user_pref("dom.push.connection.enabled", false);
 
 /****************************************************************************
  * SECTION 3: NETWORK — Fast Page Loads, Low Latency                        *
@@ -103,11 +113,18 @@ user_pref("network.predictor.enabled", true);
 
 // Speculative connections for faster link clicking
 user_pref("network.http.speculative-parallel-limit", 6);
+user_pref("network.prefetch-next", true);
 user_pref("browser.urlbar.speculativeConnect.enabled", true);
 user_pref("browser.places.speculativeConnect.enabled", true);
 
 // Faster TLS handshakes
 user_pref("security.ssl.enable_ocsp_stapling", true);
+
+// TCP Fast Open — reduces RTT on repeated connections
+user_pref("network.tcp.tcp_fastopen_enable", true);
+
+// Larger TLS session cache — skip full handshake on repeat visits
+user_pref("network.ssl_tokens_cache_capacity", 10240);
 
 /****************************************************************************
  * SECTION 4: SCROLLING — Tuned for 160Hz Display                           *
@@ -347,6 +364,11 @@ user_pref("media.suspend-bkgnd-video.enabled", false);
 // Allow autoplay (for sports streams)
 user_pref("media.autoplay.default", 0);
 
+// Low-latency audio for PiP — WASAPI event-driven at 20ms interactive latency
+user_pref("media.webaudio.audiocontextoptions-latencyhint-interactive-ms", 20);
+user_pref("media.cubeb_latency_playback_ms", 40);
+user_pref("media.cubeb_latency_msg_ms", 20);
+
 /****************************************************************************
  * SECTION 8: DEEP ENGINE TUNING — What Makes This FASTER Than Edge         *
  * These are the prefs Edge/Chromium can't match because Gecko exposes them *
@@ -362,7 +384,7 @@ user_pref("nglayout.initialpaint.delay_in_oopif", 0);
 // Increase decoded image cache to 512MB (default ~256MB)
 // At 4K resolution, images are 4x larger — this prevents re-decoding jank
 user_pref("image.mem.surfacecache.max_size_kb", 524288);
-// Minimum surface cache 128MB (default ~64MB)
+// Minimum time before a cached surface expires: 120 seconds (default ~60s)
 user_pref("image.mem.surfacecache.min_expiration_ms", 120000);
 // Decode images eagerly in idle time (smoother scrolling on image-heavy pages)
 user_pref("image.mem.decode_bytes_at_a_time", 65536);
@@ -383,27 +405,22 @@ user_pref("network.buffer.cache.count", 128);
 // Incremental GC: smaller, more frequent GC slices = less jank
 user_pref("javascript.options.mem.gc_incremental", true);
 user_pref("javascript.options.mem.gc_per_zone", true);
-// Higher GC trigger = GC happens less often (trade more RAM for less jank)
-// With 32GB RAM, we can afford to let garbage accumulate more
-user_pref("javascript.options.mem.gc_high_frequency_heap_growth_max", 300);
-user_pref("javascript.options.mem.gc_high_frequency_heap_growth_min", 150);
 
 // --- FISSION (Site Isolation) PROCESS TUNING ---
 // Keep Fission ON for security but limit isolated processes
 // This is the Edge equivalent of "sleeping tabs" — fewer processes = less RAM
 user_pref("fission.autostart", true);
-// Only 1 isolated web process — sites share processes like Edge does
-// This is the biggest RAM saver: prevents 13+ processes from spawning
-user_pref("dom.ipc.processCount.webIsolated", 1);
-user_pref("dom.ipc.processCount.webCOOP+COEP", 1);
+// Fission isolation: 4 isolated web processes — enough parallelism without RAM waste
+user_pref("dom.ipc.processCount.webIsolated", 4);
 // Limit file/extension/privilegedabout processes to 1 each
 user_pref("dom.ipc.processCount.file", 1);
 user_pref("dom.ipc.processCount.extension", 1);
 user_pref("dom.ipc.processCount.privilegedabout", 1);
 
 // --- TIMER THROTTLING ---
-// Don't aggressively throttle background tab timers when a tab has
-// active media (keeps PiP video smooth even when Firefox is in background)
+// Throttle background tab timers immediately (0ms grace period).
+// Tabs with active media (including PiP source tab) are automatically exempt,
+// so PiP stays smooth even with aggressive throttling.
 user_pref("dom.timeout.throttling_delay", 0);
 
 // --- SERVICE WORKERS ---
@@ -411,8 +428,8 @@ user_pref("dom.timeout.throttling_delay", 0);
 user_pref("dom.serviceWorkers.idle_timeout", 30000);
 user_pref("dom.serviceWorkers.idle_extended_timeout", 30000);
 
-// --- WEBRTC ---
-// Disable WebRTC leak (privacy) but keep functional for video calls
+// --- WEBSOCKET ---
+// Keep WebSocket alive longer (for live sports streams)
 user_pref("network.websocket.timeout.ping.request", 88);
 
 // --- FONT RENDERING ---
@@ -437,9 +454,3 @@ user_pref("dom.min_background_timeout_value", 10000);
 user_pref("dom.timeout.background_throttling_max_delay", 10000);
 user_pref("dom.request_idle_callback.deadline", 100);
 user_pref("network.http.max-persistent-connections-per-server", 6);
-user_pref("network.prefetch-next", false);
-
-// Final Chromium-Killer Network Tweaks
-user_pref("network.predictor.max-resources-per-entry", 250);
-user_pref("network.predictor.cleaned-up", true);
-user_pref("network.http.pacing.requests.enabled", false);
