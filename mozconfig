@@ -9,8 +9,6 @@ ac_add_options --enable-lto=thin
 # Rust: target Zen 4, max optimization with Thin LTO
 export RUSTFLAGS="-C target-cpu=znver4 -C opt-level=3 -C codegen-units=1 -C lto=thin"
 
-# Disable background/reporting components
+# Core performance-related component disabling
 ac_add_options --disable-crashreporter
 ac_add_options --disable-updater
-ac_add_options --disable-telemetry
-ac_add_options --disable-healthreport
