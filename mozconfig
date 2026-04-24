@@ -3,8 +3,8 @@ ac_add_options --enable-application=browser
 # Clang-cl flag syntax: -clang: prefix required on Windows for GCC-style flags
 ac_add_options --enable-optimize="-O3 -clang:-march=znver4"
 
-# Cross-language LTO (C++ <-> Rust): Mozilla's recommended mode for release builds
-ac_add_options --enable-lto=cross
+# Thin LTO: works across Rust/Clang regardless of LLVM version mismatch
+ac_add_options --enable-lto=thin
 
 # Release mode (enables additional release-only optimizations)
 ac_add_options --enable-release
@@ -13,7 +13,7 @@ ac_add_options --disable-debug-symbols
 
 # PGO: must use mk_add_options, not ac_add_options
 mk_add_options MOZ_PGO=1
-export MOZ_PGO_OPTIMIZE_FLAGS="-O3 -clang:-march=znver4 -fprofile-use -fprofile-correction"
+export MOZ_PGO_OPTIMIZE_FLAGS="-O3 -clang:-march=znver4"
 
 # Limit parallelism during PGO+LTO link to avoid OOM on 32GB
 mk_add_options MOZ_MAKE_FLAGS=-j4

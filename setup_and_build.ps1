@@ -76,7 +76,7 @@ Write-Step "Installing optimized mozconfig"
 Invoke-WebRequest `
     -Uri "https://raw.githubusercontent.com/pystIC/firefox-zen4-build/master/mozconfig" `
     -OutFile "$SrcDir\mozconfig"
-Write-OK "mozconfig installed (cross LTO + PGO + Zen 4)"
+Write-OK "mozconfig installed (thin LTO + PGO + Zen 4)"
 
 # ---------------------------------------------------------------------------
 # PATCH TABUNLOADER
@@ -145,17 +145,20 @@ $insert = @"
   },
 "@
 
-if (-not $norm.Contains($find)) {
+if ($norm.Contains("_startProactiveUnloadTimer")) {
+    Write-OK "TabUnloader already patched — skipping"
+} elseif (-not $norm.Contains($find)) {
     Write-Fail "Could not find TabUnloader injection point. Firefox 150.0 source may differ — check indentation."
-}
+} else {
 
-$patched = $norm.Replace($find, $insert)
-[System.IO.File]::WriteAllText($tabFile, $patched)
+    $patched = $norm.Replace($find, $insert)
+    [System.IO.File]::WriteAllText($tabFile, $patched)
 
-if (-not (Select-String -Path $tabFile -Pattern "_startProactiveUnloadTimer" -Quiet)) {
-    Write-Fail "Patch verification failed after write"
+    if (-not (Select-String -Path $tabFile -Pattern "_startProactiveUnloadTimer" -Quiet)) {
+        Write-Fail "Patch verification failed after write"
+    }
+    Write-OK "TabUnloader patched and verified"
 }
-Write-OK "TabUnloader patched and verified"
 
 # ---------------------------------------------------------------------------
 # INSTALL USER.JS
@@ -167,7 +170,7 @@ Write-Host "  Copy to: %APPDATA%\Mozilla\Firefox\Profiles\<your-profile>\user.js
 # ---------------------------------------------------------------------------
 # BUILD
 # ---------------------------------------------------------------------------
-Write-Step "Starting build — PGO + cross LTO + Zen 4 (~4-6 hours)"
+Write-Step "Starting build — PGO + thin LTO + Zen 4 (~4-6 hours)"
 Write-Host "  Log file: $SrcDir\build.log" -ForegroundColor Yellow
 Write-Host "  Monitor lld-link.exe in Task Manager during the long silent link phase." -ForegroundColor Yellow
 Write-Host "  DO NOT close this window.`n" -ForegroundColor Red
