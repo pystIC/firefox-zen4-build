@@ -27,13 +27,13 @@ if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
 Write-OK "Rust/cargo found"
 
 # ---------------------------------------------------------------------------
-# SOURCE — reuse if already present, otherwise download
+# SOURCE - reuse if already present, otherwise download
 # ---------------------------------------------------------------------------
 $versionFile = "$SrcDir\browser\config\version.txt"
 $hasSource   = (Test-Path $versionFile) -and ((Get-Content $versionFile).Trim() -eq "150.0")
 
 if ($hasSource) {
-    Write-Step "Firefox 150.0 source already present at $SrcDir — skipping download"
+    Write-Step "Firefox 150.0 source already present at $SrcDir - skipping download"
     # Only wipe the obj directory so the build starts clean
     $objDir = "$SrcDir\obj-x86_64-pc-windows-msvc"
     if (Test-Path $objDir) {
@@ -146,9 +146,9 @@ $insert = @"
 "@
 
 if ($norm.Contains("_startProactiveUnloadTimer")) {
-    Write-OK "TabUnloader already patched — skipping"
+    Write-OK "TabUnloader already patched - skipping"
 } elseif (-not $norm.Contains($find)) {
-    Write-Fail "Could not find TabUnloader injection point. Firefox 150.0 source may differ — check indentation."
+    Write-Fail "Could not find TabUnloader injection point. Firefox 150.0 source may differ - check indentation."
 } else {
 
     $patched = $norm.Replace($find, $insert)
@@ -170,7 +170,7 @@ Write-Host "  Copy to: %APPDATA%\Mozilla\Firefox\Profiles\<your-profile>\user.js
 # ---------------------------------------------------------------------------
 # BUILD
 # ---------------------------------------------------------------------------
-Write-Step "Starting build — PGO + thin LTO + Zen 4 (~4-6 hours)"
+Write-Step "Starting build - PGO + thin LTO + Zen 4 (~4-6 hours)"
 Write-Host "  Log file: $SrcDir\build.log" -ForegroundColor Yellow
 Write-Host "  Monitor lld-link.exe in Task Manager during the long silent link phase." -ForegroundColor Yellow
 Write-Host "  DO NOT close this window.`n" -ForegroundColor Red
