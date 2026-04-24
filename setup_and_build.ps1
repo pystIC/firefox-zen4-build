@@ -27,13 +27,13 @@ if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
 Write-OK "Rust/cargo found"
 
 # ---------------------------------------------------------------------------
-# SOURCE - reuse if already present, otherwise download
+# SOURCE — reuse if already present, otherwise download
 # ---------------------------------------------------------------------------
 $versionFile = "$SrcDir\browser\config\version.txt"
 $hasSource   = (Test-Path $versionFile) -and ((Get-Content $versionFile).Trim() -eq "150.0")
 
 if ($hasSource) {
-    Write-Step "Firefox 150.0 source already present at $SrcDir - skipping download"
+    Write-Step "Firefox 150.0 source already present at $SrcDir — skipping download"
     # Only wipe the obj directory so the build starts clean
     $objDir = "$SrcDir\obj-x86_64-pc-windows-msvc"
     if (Test-Path $objDir) {
@@ -76,7 +76,7 @@ Write-Step "Installing optimized mozconfig"
 Invoke-WebRequest `
     -Uri "https://raw.githubusercontent.com/pystIC/firefox-zen4-build/master/mozconfig" `
     -OutFile "$SrcDir\mozconfig"
-Write-OK "mozconfig installed (cross LTO + PGO + Zen 4)"
+Write-OK "mozconfig installed (thin LTO + PGO + Zen 4)"
 
 # ---------------------------------------------------------------------------
 # PATCH TABUNLOADER
@@ -90,12 +90,9 @@ if (-not (Test-Path $tabFile)) { Write-Fail "TabUnloader.sys.mjs not found at $t
 $raw  = [System.IO.File]::ReadAllText($tabFile)
 $norm = $raw.Replace("`r`n", "`n")
 
-if ($norm.Contains("_startProactiveUnloadTimer")) {
-    Write-OK "TabUnloader already patched - skipping"
-} else {
-    $find = "    watcher.registerTabUnloader(this);`n  },"
+$find = "    watcher.registerTabUnloader(this);`n  },"
 
-    $insert = @"
+$insert = @"
     watcher.registerTabUnloader(this);
 
     if (Services.prefs.getBoolPref("browser.tabs.unloadOnLowMemory", true)) {
@@ -148,9 +145,11 @@ if ($norm.Contains("_startProactiveUnloadTimer")) {
   },
 "@
 
-    if (-not $norm.Contains($find)) {
-        Write-Fail "Could not find TabUnloader injection point. Firefox 150.0 source may differ."
-    }
+if ($norm.Contains("_startProactiveUnloadTimer")) {
+    Write-OK "TabUnloader already patched — skipping"
+} elseif (-not $norm.Contains($find)) {
+    Write-Fail "Could not find TabUnloader injection point. Firefox 150.0 source may differ — check indentation."
+} else {
 
     $patched = $norm.Replace($find, $insert)
     [System.IO.File]::WriteAllText($tabFile, $patched)
@@ -162,17 +161,17 @@ if ($norm.Contains("_startProactiveUnloadTimer")) {
 }
 
 # ---------------------------------------------------------------------------
-# INSTALL USER.JS REMINDER
+# INSTALL USER.JS
 # ---------------------------------------------------------------------------
 Write-Step "Reminder: copy user.js to your Firefox profile after build"
-Write-Host "  Download: https://raw.githubusercontent.com/pystIC/firefox-zen4-build/master/user.js" -ForegroundColor Yellow
-Write-Host "  Copy to:  %APPDATA%\Mozilla\Firefox\Profiles\<your-profile>\user.js" -ForegroundColor Yellow
+Write-Host "  Download from: https://raw.githubusercontent.com/pystIC/firefox-zen4-build/master/user.js" -ForegroundColor Yellow
+Write-Host "  Copy to: %APPDATA%\Mozilla\Firefox\Profiles\<your-profile>\user.js" -ForegroundColor Yellow
 
 # ---------------------------------------------------------------------------
 # BUILD
 # ---------------------------------------------------------------------------
-Write-Step "Starting build - PGO + cross LTO + Zen 4 (~4-6 hours)"
-Write-Host "  Log: $SrcDir\build.log" -ForegroundColor Yellow
+Write-Step "Starting build — PGO + thin LTO + Zen 4 (~4-6 hours)"
+Write-Host "  Log file: $SrcDir\build.log" -ForegroundColor Yellow
 Write-Host "  Monitor lld-link.exe in Task Manager during the long silent link phase." -ForegroundColor Yellow
 Write-Host "  DO NOT close this window.`n" -ForegroundColor Red
 
