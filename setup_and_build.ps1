@@ -27,36 +27,39 @@ if (-not (Get-Command cargo -ErrorAction SilentlyContinue)) {
 Write-OK "Rust/cargo found"
 
 # ---------------------------------------------------------------------------
-# CLEAN
+# SOURCE — reuse if already present, otherwise download
 # ---------------------------------------------------------------------------
-Write-Step "Cleaning old build at $SrcDir"
-if (Test-Path $SrcDir) {
-    Remove-Item -Recurse -Force $SrcDir
-    Write-OK "Removed old directory"
+$versionFile = "$SrcDir\browser\config\version.txt"
+$hasSource   = (Test-Path $versionFile) -and ((Get-Content $versionFile).Trim() -eq "150.0")
+
+if ($hasSource) {
+    Write-Step "Firefox 150.0 source already present at $SrcDir — skipping download"
+    # Only wipe the obj directory so the build starts clean
+    $objDir = "$SrcDir\obj-x86_64-pc-windows-msvc"
+    if (Test-Path $objDir) {
+        Write-Host "  Removing old obj directory..." -ForegroundColor Yellow
+        Remove-Item -Recurse -Force $objDir
+        Write-OK "Old build artifacts removed"
+    } else {
+        Write-OK "No old obj directory to clean"
+    }
+} else {
+    Write-Step "Downloading Firefox 150.0 source (~600MB)"
+    New-Item -ItemType Directory -Force $SrcDir | Out-Null
+    $tarball = "$SrcDir\src.tar.xz"
+    Invoke-WebRequest `
+        -Uri "https://archive.mozilla.org/pub/firefox/releases/150.0/source/firefox-150.0.source.tar.xz" `
+        -OutFile $tarball
+    Write-OK "Download complete"
+
+    Write-Step "Extracting source (2-5 minutes)"
+    Push-Location $SrcDir
+    tar -xf src.tar.xz --strip-components=1
+    if ($LASTEXITCODE -ne 0) { Write-Fail "Extraction failed" }
+    Remove-Item src.tar.xz
+    Pop-Location
+    Write-OK "Extracted to $SrcDir"
 }
-New-Item -ItemType Directory -Force $SrcDir | Out-Null
-Write-OK "Created clean $SrcDir"
-
-# ---------------------------------------------------------------------------
-# DOWNLOAD SOURCE
-# ---------------------------------------------------------------------------
-Write-Step "Downloading Firefox 150.0 source (~600MB)"
-$tarball = "$SrcDir\src.tar.xz"
-Invoke-WebRequest `
-    -Uri "https://archive.mozilla.org/pub/firefox/releases/150.0/source/firefox-150.0.source.tar.xz" `
-    -OutFile $tarball
-Write-OK "Download complete"
-
-# ---------------------------------------------------------------------------
-# EXTRACT
-# ---------------------------------------------------------------------------
-Write-Step "Extracting source (2-5 minutes)"
-Push-Location $SrcDir
-tar -xf src.tar.xz --strip-components=1
-if ($LASTEXITCODE -ne 0) { Write-Fail "Extraction failed" }
-Remove-Item src.tar.xz
-Pop-Location
-Write-OK "Extracted to $SrcDir"
 
 # ---------------------------------------------------------------------------
 # VERIFY
