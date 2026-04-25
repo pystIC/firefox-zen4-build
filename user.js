@@ -24,7 +24,7 @@
 user_pref("gfx.webrender.all", true);
 user_pref("gfx.webrender.enabled", true);
 user_pref("gfx.webrender.compositor.force-enabled", true);
-user_pref("gfx.webrender.dcomp-video-hw-overlay-win-force-enabled", true);
+user_pref("gfx.webrender.dcomp-video-hw-overlay-win-force-enabled", false);
 user_pref("gfx.webrender.precache-shaders", true);
 user_pref("gfx.webrender.dcomp-use-virtual-surfaces", true);
 
@@ -35,7 +35,7 @@ user_pref("gfx.canvas.accelerated.cache-size", 4096);
 
 // Enable hardware video decoding via WMF/D3D11 (RX 9070 XT on Windows)
 user_pref("media.hardware-video-decoding.enabled", true);
-user_pref("media.hardware-video-decoding.force-enabled", true);
+user_pref("media.hardware-video-decoding.force-enabled", false);
 
 // Use GPU for compositing
 user_pref("layers.gpu-process.enabled", true);
@@ -102,7 +102,7 @@ user_pref("network.http.max-connections", 1800);
 user_pref("network.http.max-urgent-start-excessive-connections-per-host", 5);
 
 // DNS-over-HTTPS (Cloudflare) — faster + private DNS resolution
-user_pref("network.trr.mode", 3);
+user_pref("network.trr.mode", 2);
 user_pref("network.trr.uri", "https://mozilla.cloudflare-dns.com/dns-query");
 
 // Enable DNS prefetching for speed (overrides Betterfox privacy default)
