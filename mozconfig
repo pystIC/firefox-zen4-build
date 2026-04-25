@@ -11,15 +11,11 @@ ac_add_options --enable-release
 ac_add_options --disable-debug
 ac_add_options --disable-debug-symbols
 
-# PGO: must use mk_add_options, not ac_add_options
-mk_add_options MOZ_PGO=1
-export MOZ_PGO_OPTIMIZE_FLAGS="-O3 -clang:-march=znver4"
+# 6 parallel jobs - safe with system-managed pagefile on 32GB
+mk_add_options MOZ_MAKE_FLAGS=-j6
 
-# Limit parallelism during PGO+LTO link to avoid OOM on 32GB
-mk_add_options MOZ_MAKE_FLAGS=-j4
-
-# Rust: target Zen 4, max optimization, single codegen unit for LTO
-export RUSTFLAGS="-C target-cpu=znver4 -C opt-level=3 -C codegen-units=1"
+# Rust: target Zen 4, max optimization, thin LTO handles cross-module so codegen-units=4 is fine
+export RUSTFLAGS="-C target-cpu=znver4 -C opt-level=3 -C codegen-units=4"
 
 # Disable unused subsystems (smaller binary, fewer indirect calls)
 ac_add_options --disable-crashreporter
