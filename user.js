@@ -53,16 +53,15 @@ user_pref("javascript.options.ion", true);
  * SECTION 2: RESOURCE MANAGEMENT — RAM & Process Control                   *
  ****************************************************************************/
 
-// Disable disk cache — use memory only (you have 32GB + NVMe, no need
-// for disk cache I/O competing with game asset loading)
-user_pref("browser.cache.disk.enable", false);
+// Disk cache on — NVMe is fast enough that cache hits reduce total I/O
+user_pref("browser.cache.disk.enable", true);
 
 // Memory cache limit: 256MB (enough for active tabs, keeps total under 1GB)
 user_pref("browser.cache.memory.enable", true);
 user_pref("browser.cache.memory.capacity", 262144);
 
-// Force media into memory cache (prevents disk I/O during PiP video)
-user_pref("browser.privatebrowsing.forceMediaMemoryCache", true);
+// Allow media to use disk cache (prevents cold re-fetch on every visit)
+user_pref("browser.privatebrowsing.forceMediaMemoryCache", false);
 user_pref("media.memory_cache_max_size", 65536);
 
 // Auto-unload background tabs when memory is low
